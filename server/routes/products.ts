@@ -2,6 +2,8 @@ import { productCreateSchema, productUpdateSchema } from '../utils/validate';
 import express from 'express';
 import { getDb, nextCode } from '../db';
 import { authMid, requireRole } from '../middleware';
+import { uid } from '../utils/id';
+import { safeError } from '../utils/safeError';
 
 export const productsRouter = express.Router();
 productsRouter.use(authMid);
@@ -27,8 +29,7 @@ productsRouter.get('/', (req, res) => {
     sql += ' ORDER BY p.name';
     res.json({ success: true, data: getDb().prepare(sql).all(...p) });
   } catch (e: any) {
-    console.error('/api/products GET error:', e);
-    res.status(500).json({ success: false, error: 'Erro ao listar produtos' });
+    safeError(res, 500, 'Erro ao listar produtos', e.message);
   }
 });
 
@@ -47,8 +48,7 @@ productsRouter.get('/barcode/:bc', (req, res) => {
       .get(`${escaped}%`, `${escaped}%`, `${escaped}%`);
     res.json({ success: true, data: prefix || null });
   } catch (e: any) {
-    console.error('/api/products/barcode/:bc GET error:', e);
-    res.status(500).json({ success: false, error: 'Erro ao buscar por código de barras' });
+    safeError(res, 500, 'Erro ao buscar por código de barras', e.message);
   }
 });
 
@@ -62,8 +62,7 @@ productsRouter.get('/:id', (req, res) => {
     if (!p) return res.status(404).json({ success: false, error: 'Produto não encontrado' });
     res.json({ success: true, data: p });
   } catch (e: any) {
-    console.error('/api/products/:id GET error:', e);
-    res.status(500).json({ success: false, error: 'Erro ao buscar produto' });
+    safeError(res, 500, 'Erro ao buscar produto', e.message);
   }
 });
 
@@ -75,7 +74,7 @@ productsRouter.post('/', requireRole('admin', 'gerente'), (req: any, res) => {
     }
     const body = parsed.data;
     const d = getDb();
-    const id = `prd-${Date.now()}`;
+    const id = uid('prd');
     let catName = body.category || '';
     if (!catName && body.categoryId) {
       const c = d.prepare('SELECT name FROM categories WHERE id = ?').get(body.categoryId) as any;
@@ -96,8 +95,7 @@ productsRouter.post('/', requireRole('admin', 'gerente'), (req: any, res) => {
     );
     res.json({ success: true, data: { id, code } });
   } catch (e: any) {
-    console.error('/api/products POST error:', e);
-    res.status(500).json({ success: false, error: 'Erro ao criar produto' });
+    safeError(res, 500, 'Erro ao criar produto', e.message);
   }
 });
 
@@ -151,8 +149,7 @@ productsRouter.put('/:id', requireRole('admin', 'gerente'), (req: any, res) => {
     d.prepare(`UPDATE products SET ${f.join(', ')} WHERE id = ?`).run(...v);
     res.json({ success: true, data: null });
   } catch (e: any) {
-    console.error('/api/products PUT error:', e);
-    res.status(500).json({ success: false, error: 'Erro ao atualizar produto' });
+    safeError(res, 500, 'Erro ao atualizar produto', e.message);
   }
 });
 
@@ -161,7 +158,6 @@ productsRouter.delete('/:id', requireRole('admin'), (req, res) => {
     getDb().prepare('UPDATE products SET active = 0 WHERE id = ?').run(req.params.id);
     res.json({ success: true, data: null });
   } catch (e: any) {
-    console.error('/api/products DELETE error:', e);
-    res.status(500).json({ success: false, error: 'Erro ao desativar produto' });
+    safeError(res, 500, 'Erro ao desativar produto', e.message);
   }
 });

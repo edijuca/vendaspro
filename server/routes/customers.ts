@@ -2,6 +2,8 @@ import { customerCreateSchema, customerUpdateSchema, customerPaymentSchema } fro
 import express from 'express';
 import { getDb, nextCode } from '../db';
 import { authMid } from '../middleware';
+import { uid } from '../utils/id';
+import { safeError } from '../utils/safeError';
 
 export const customersRouter = express.Router();
 customersRouter.use(authMid);
@@ -14,8 +16,7 @@ customersRouter.get('/', (req, res) => {
       .all();
     res.json({ success: true, data });
   } catch (e: any) {
-    console.error('/api/customers GET error:', e);
-    res.status(500).json({ success: false, error: 'Erro ao listar clientes' });
+    safeError(res, 500, 'Erro ao listar clientes', e.message);
   }
 });
 
@@ -25,8 +26,7 @@ customersRouter.get('/:id', (req, res) => {
     if (!c) return res.status(404).json({ success: false, error: 'Cliente não encontrado' });
     res.json({ success: true, data: c });
   } catch (e: any) {
-    console.error('/api/customers/:id GET error:', e);
-    res.status(500).json({ success: false, error: 'Erro ao buscar cliente' });
+    safeError(res, 500, 'Erro ao buscar cliente', e.message);
   }
 });
 
@@ -37,15 +37,14 @@ customersRouter.post('/', (req: any, res) => {
       return res.status(400).json({ success: false, error: 'Dados inválidos: ' + parsed.error.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ') });
     }
     const body = parsed.data;
-    const id = `cli-${Date.now()}`;
+    const id = uid('cli');
     getDb().prepare(`INSERT INTO customers (id,code,name,cpf,email,phone,creditLimit,currentDebt,creditStatus,dueDays) VALUES (?,?,?,?,?,?,?,?,?,?)`).run(
       id, nextCode('CLI'), body.name, body.cpf || '', body.email || '', body.phone || '',
       body.creditLimit, 0, body.creditStatus, body.dueDays
     );
     res.json({ success: true, data: { id } });
   } catch (e: any) {
-    console.error('/api/customers POST error:', e);
-    res.status(500).json({ success: false, error: 'Erro ao criar cliente' });
+    safeError(res, 500, 'Erro ao criar cliente', e.message);
   }
 });
 
@@ -69,8 +68,7 @@ customersRouter.put('/:id', (req: any, res) => {
     d.prepare(`UPDATE customers SET ${f.join(', ')} WHERE id = ?`).run(...v);
     res.json({ success: true, data: null });
   } catch (e: any) {
-    console.error('/api/customers PUT error:', e);
-    res.status(500).json({ success: false, error: 'Erro ao atualizar cliente' });
+    safeError(res, 500, 'Erro ao atualizar cliente', e.message);
   }
 });
 
@@ -99,14 +97,13 @@ customersRouter.post('/:id/payments', (req: any, res) => {
       d.prepare('UPDATE customers SET currentDebt = ?, creditStatus = ? WHERE id = ?').run(newDebt, newStatus, cust.id);
       d.prepare('UPDATE cash_registers SET balance = balance + ? WHERE id = ?').run(amount, openReg.id);
       d.prepare(`INSERT INTO cash_movements (id,cashRegisterId,type,amount,description,timestamp,operator,operatorId,referenceId) VALUES (?,?,?,?,?,?,?,?,?)`).run(
-        `cm-${Date.now()}-${Math.random().toString(36).slice(2,4)}`, openReg.id, 'recebimento', amount,
+        uid('cm'), openReg.id, 'recebimento', amount,
         description || `Recebimento fiado — ${cust.name}`, new Date().toISOString(), req.user.name, req.user.id, cust.id
       );
     });
     tx();
     res.json({ success: true, data: { currentDebt: Math.max(0, cust.currentDebt - amount) } });
   } catch (e: any) {
-    console.error('/api/customers/:id/payments POST error:', e);
-    res.status(500).json({ success: false, error: 'Erro ao registrar recebimento' });
+    safeError(res, 500, 'Erro ao registrar recebimento', e.message);
   }
 });

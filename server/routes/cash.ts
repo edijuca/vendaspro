@@ -1,6 +1,8 @@
 import express from 'express';
 import { getDb, nextCode } from '../db';
 import { authMid, requireRole } from '../middleware';
+import { uid } from '../utils/id';
+import { safeError } from '../utils/safeError';
 
 export const cashRouter = express.Router();
 cashRouter.use(authMid);
@@ -71,7 +73,7 @@ cashRouter.get('/registers', (_req, res) => {
   try {
     res.json({ success: true, data: getDb().prepare('SELECT * FROM cash_registers ORDER BY openedAt DESC').all() });
   } catch (e: any) {
-    res.status(500).json({ success: false, error: e.message });
+    safeError(res, 500, 'Erro interno do servidor', e.message);
   }
 });
 
@@ -80,7 +82,7 @@ cashRouter.get('/registers/current', (_req, res) => {
     const r = getDb().prepare("SELECT * FROM cash_registers WHERE status = 'aberto' LIMIT 1").get();
     res.json({ success: true, data: r || null });
   } catch (e: any) {
-    res.status(500).json({ success: false, error: e.message });
+    safeError(res, 500, 'Erro interno do servidor', e.message);
   }
 });
 
@@ -91,7 +93,7 @@ cashRouter.get('/registers/:id', (req, res) => {
     if (!r) return;
     res.json({ success: true, data: { ...r, summary: computeSessionSummary(d, r) } });
   } catch (e: any) {
-    res.status(500).json({ success: false, error: e.message });
+    safeError(res, 500, 'Erro interno do servidor', e.message);
   }
 });
 
@@ -117,7 +119,7 @@ cashRouter.get('/registers/:id/summary', (req, res) => {
       },
     });
   } catch (e: any) {
-    res.status(500).json({ success: false, error: e.message });
+    safeError(res, 500, 'Erro interno do servidor', e.message);
   }
 });
 
@@ -159,7 +161,7 @@ cashRouter.get('/registers/:id/report', (req, res) => {
       },
     });
   } catch (e: any) {
-    res.status(500).json({ success: false, error: e.message });
+    safeError(res, 500, 'Erro interno do servidor', e.message);
   }
 });
 
@@ -168,7 +170,7 @@ cashRouter.post('/registers/open', requireRole('admin', 'gerente', 'caixa'), (re
     const d = getDb();
     const open = d.prepare("SELECT id FROM cash_registers WHERE status = 'aberto' LIMIT 1").get();
     if (open) return res.status(400).json({ success: false, error: 'Já existe um caixa aberto' });
-    const id = `reg-${Date.now()}`;
+    const id = uid('reg');
     const code = nextCode('REG');
     const opening = Math.max(0, Number(req.body.openingBalance) || 0);
     d.prepare(`INSERT INTO cash_registers (id,code,openedAt,openingBalance,balance,salesTotal,operator,operatorId) VALUES (?,?,?,?,?,?,?,?)`).run(
@@ -176,7 +178,7 @@ cashRouter.post('/registers/open', requireRole('admin', 'gerente', 'caixa'), (re
     );
     res.json({ success: true, data: { id, code } });
   } catch (e: any) {
-    res.status(500).json({ success: false, error: e.message });
+    safeError(res, 500, 'Erro interno do servidor', e.message);
   }
 });
 
@@ -197,7 +199,7 @@ cashRouter.post('/registers/:id/close', requireRole('admin', 'gerente', 'caixa')
     ).run(new Date().toISOString(), expected, countedBalance, difference, closedBy, req.params.id);
     res.json({ success: true, data: { expected, counted: countedBalance, difference } });
   } catch (e: any) {
-    res.status(500).json({ success: false, error: e.message });
+    safeError(res, 500, 'Erro interno do servidor', e.message);
   }
 });
 
@@ -214,7 +216,7 @@ cashRouter.post('/registers/:id/reopen', requireRole('admin'), (req: any, res) =
     ).run(req.params.id);
     res.json({ success: true, data: null });
   } catch (e: any) {
-    res.status(500).json({ success: false, error: e.message });
+    safeError(res, 500, 'Erro interno do servidor', e.message);
   }
 });
 
@@ -227,7 +229,7 @@ cashRouter.get('/movements', (req, res) => {
     sql += ' ORDER BY timestamp DESC LIMIT 200';
     res.json({ success: true, data: getDb().prepare(sql).all(...p) });
   } catch (e: any) {
-    res.status(500).json({ success: false, error: e.message });
+    safeError(res, 500, 'Erro interno do servidor', e.message);
   }
 });
 
@@ -262,7 +264,7 @@ cashRouter.post('/movements', requireRole('admin', 'gerente', 'caixa'), (req: an
       return res.status(400).json({ success: false, error: 'Nenhum caixa aberto' });
     }
 
-    const id = `cm-${Date.now()}-${Math.random().toString(36).slice(2,4)}`;
+    const id = uid('cm');
     const reason = String(req.body.reason || req.body.description || '');
     const tx = d.transaction(() => {
       d.prepare(`INSERT INTO cash_movements (id,cashRegisterId,type,amount,description,reason,timestamp,operator,operatorId,referenceId) VALUES (?,?,?,?,?,?,?,?,?,?)`).run(
@@ -279,6 +281,6 @@ cashRouter.post('/movements', requireRole('admin', 'gerente', 'caixa'), (req: an
     tx();
     res.json({ success: true, data: { id } });
   } catch (e: any) {
-    res.status(500).json({ success: false, error: e.message });
+    safeError(res, 500, 'Erro interno do servidor', e.message);
   }
 });

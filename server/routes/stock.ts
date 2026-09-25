@@ -1,6 +1,8 @@
 import express from 'express';
 import { getDb, nextCode } from '../db';
 import { authMid } from '../middleware';
+import { uid } from '../utils/id';
+import { safeError } from '../utils/safeError';
 
 export const stockRouter = express.Router();
 stockRouter.use(authMid);
@@ -18,7 +20,7 @@ stockRouter.get('/', (req, res) => {
     sql += ' ORDER BY timestamp DESC LIMIT 500';
     res.json({ success: true, data: getDb().prepare(sql).all(...p) });
   } catch (e: any) {
-    res.status(500).json({ success: false, error: e.message });
+    safeError(res, 500, 'Erro interno do servidor', e.message);
   }
 });
 
@@ -39,7 +41,7 @@ stockRouter.get('/summary', (_req, res) => {
       },
     });
   } catch (e: any) {
-    res.status(500).json({ success: false, error: e.message });
+    safeError(res, 500, 'Erro interno do servidor', e.message);
   }
 });
 
@@ -53,7 +55,7 @@ stockRouter.post('/', (req: any, res) => {
       return res.status(400).json({ success: false, error: 'Produto e quantidade são obrigatórios' });
     }
 
-    const id = `mov-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+    const id = uid('mov');
     let resultId = id;
 
     const tx = d.transaction(() => {
@@ -83,6 +85,6 @@ stockRouter.post('/', (req: any, res) => {
     }
     res.json({ success: true, data: { id: resultId } });
   } catch (e: any) {
-    res.status(500).json({ success: false, error: e.message });
+    safeError(res, 500, 'Erro interno do servidor', e.message);
   }
 });

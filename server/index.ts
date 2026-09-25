@@ -6,6 +6,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { getDb } from './db';
 import { authMid } from './middleware';
+import { safeError } from './utils/safeError';
 import { authRouter } from './routes/auth';
 import { productsRouter } from './routes/products';
 import { salesRouter } from './routes/sales';
@@ -47,7 +48,7 @@ app.get('/api/health', (_req, res) => {
     getDb();
     res.json({ success: true, data: { status: 'ok', timestamp: new Date().toISOString() } });
   } catch (e: any) {
-    res.status(500).json({ success: false, error: e.message });
+    safeError(res, 500, 'Erro interno do servidor', e.message);
   }
 });
 

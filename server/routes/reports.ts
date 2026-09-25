@@ -1,6 +1,7 @@
 import express from 'express';
 import { getDb } from '../db';
 import { authMid, requireRole } from '../middleware';
+import { safeError } from '../utils/safeError';
 
 export const reportsRouter = express.Router();
 reportsRouter.use(authMid);
@@ -74,7 +75,7 @@ reportsRouter.get('/sales', requireRole('admin', 'gerente'), (req, res) => {
       },
     });
   } catch (e: any) {
-    res.status(500).json({ success: false, error: e.message });
+    safeError(res, 500, 'Erro interno do servidor', e.message);
   }
 });
 
@@ -89,6 +90,6 @@ reportsRouter.get('/stock-low', requireRole('admin', 'gerente'), (_req, res) => 
     `).all();
     res.json({ success: true, data });
   } catch (e: any) {
-    res.status(500).json({ success: false, error: e.message });
+    safeError(res, 500, 'Erro interno do servidor', e.message);
   }
 });

@@ -2,6 +2,7 @@ import { settingsUpdateSchema } from '../utils/validate';
 import express from 'express';
 import { getDb } from '../db';
 import { authMid, requireRole } from '../middleware';
+import { safeError } from '../utils/safeError';
 
 export function registerSettings(app: express.Express) {
   app.get('/api/settings', authMid, (_req, res) => {
@@ -9,8 +10,7 @@ export function registerSettings(app: express.Express) {
       const s = getDb().prepare('SELECT * FROM company_settings WHERE id = 1').get() as any;
       res.json({ success: true, data: s || {} });
     } catch (e: any) {
-      console.error('/api/settings GET error:', e);
-      res.status(500).json({ success: false, error: 'Erro ao buscar configurações' });
+      safeError(res, 500, 'Erro ao buscar configurações', e.message);
     }
   });
 
@@ -35,8 +35,7 @@ export function registerSettings(app: express.Express) {
       }
       res.json({ success: true, data: null });
     } catch (e: any) {
-      console.error('/api/settings PUT error:', e);
-      res.status(500).json({ success: false, error: 'Erro ao atualizar configurações' });
+      safeError(res, 500, 'Erro ao atualizar configurações', e.message);
     }
   });
 }

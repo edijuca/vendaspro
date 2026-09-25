@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { getDb } from '../db';
 import { authMid, JWT_SECRET } from '../middleware';
+import { safeError } from '../utils/safeError';
 
 export const authRouter = express.Router();
 const loginLimiter = rateLimit({
@@ -24,7 +25,7 @@ authRouter.post('/login', loginLimiter, (req, res) => {
     const token = jwt.sign({ id: u.id, name: u.name, role: u.role }, JWT_SECRET, { expiresIn: '8h' });
     res.json({ success: true, data: { token, user: { id: u.id, name: u.name, email: u.email, role: u.role } } });
   } catch (e: any) {
-    res.status(500).json({ success: false, error: e.message });
+    safeError(res, 500, 'Erro interno do servidor', e.message);
   }
 });
 
