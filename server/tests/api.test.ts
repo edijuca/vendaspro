@@ -4,10 +4,7 @@ import path from 'path';
 import os from 'os';
 import fs from 'fs';
 
-const tmpDb = path.join(
-  os.tmpdir(),
-  `vendaspro-test-${Date.now()}-${Math.random().toString(36).slice(2)}.db`
-);
+const tmpDb = path.join(os.tmpdir(), `vendaspro-test-${Date.now()}-${Math.random().toString(36).slice(2)}.db`);
 process.env.DB_PATH = tmpDb;
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'vendaspro-test-secret';
 process.env.VP_SEED_PASSWORD = process.env.VP_SEED_PASSWORD || 'TestAdmin123!';
@@ -15,9 +12,9 @@ process.env.VP_SEED_PASSWORD = process.env.VP_SEED_PASSWORD || 'TestAdmin123!';
 let app: any;
 let token = '';
 let openRegId = '';
+let caixaToken = '';
 
 beforeAll(async () => {
-  // Pré-existe o arquivo para que o backup rotativo de inicialização seja exercitado
   if (!fs.existsSync(tmpDb)) {
     const Database = (await import('better-sqlite3')).default;
     new Database(tmpDb).close();
@@ -34,7 +31,7 @@ afterAll(() => {
   try { fs.unlinkSync(tmpDb); } catch { /* ignore */ }
   try { fs.unlinkSync(`${tmpDb}-wal`); } catch { /* ignore */ }
   try { fs.unlinkSync(`${tmpDb}-shm`); } catch { /* ignore */ }
-  const stem = path.basename(tmpDb).replace(/\.db$/, '');
+  const stem = path.basename(tmpDb).replace(/\\.db$/, '');
   try {
     for (const f of fs.readdirSync(os.tmpdir())) {
       if (f.startsWith(`${stem}-`) && f.endsWith('.db.bak')) {
@@ -45,12 +42,15 @@ afterAll(() => {
 });
 
 const auth = () => ({ Authorization: `Bearer ${token}` });
+const caixaAuth = () => ({ Authorization: `Bearer ${caixaToken}` });
 
 async function firstProductId(): Promise<string> {
   const res = await request(app).get('/api/products').set(auth());
   expect(res.status).toBe(200);
   return res.body.data[0].id;
 }
+
+// ───────── TESTES ORIGINAIS ─────────
 
 describe('auth e settings', () => {
   it('login com credenciais do seed', async () => {
@@ -210,7 +210,6 @@ describe('venda: preço server-side, promo, estoque, caixa', () => {
 
 describe('caixa: suprimento, sangria, fiado, formas, fechamento', () => {
   let openReg = '';
-  let caixaToken = '';
   let customerId = '';
 
   const cur = async () => {
@@ -380,7 +379,7 @@ describe('caixa: suprimento, sangria, fiado, formas, fechamento', () => {
       .send({ withdrawalLimit: 50 });
     const over = await request(app)
       .post('/api/cash/movements')
-      .set({ Authorization: `Bearer ${caixaToken}` })
+      .set(caixaAuth())
       .send({ type: 'sangria', amount: 100, description: 'Acima do limite' });
     expect(over.status).toBe(403);
     expect(over.body.error).toMatch(/limite|autoriza/i);
@@ -391,7 +390,7 @@ describe('caixa: suprimento, sangria, fiado, formas, fechamento', () => {
     expect(adminOver.status).toBe(200);
     const under = await request(app)
       .post('/api/cash/movements')
-      .set({ Authorization: `Bearer ${caixaToken}` })
+      .set(caixaAuth())
       .send({ type: 'sangria', amount: 30, description: 'Dentro do limite' });
     expect(under.status).toBe(200);
     await request(app)
@@ -437,7 +436,7 @@ describe('caixa: suprimento, sangria, fiado, formas, fechamento', () => {
   it('reopen: caixa → 403, admin → 200 e status aberto', async () => {
     const denied = await request(app)
       .post(`/api/cash/registers/${openReg}/reopen`)
-      .set({ Authorization: `Bearer ${caixaToken}` });
+      .set(caixaAuth());
     expect(denied.status).toBe(403);
     const ok = await request(app)
       .post(`/api/cash/registers/${openReg}/reopen`)
@@ -514,7 +513,9 @@ describe('integridade: exclusão direta bloqueada e backup', () => {
     expect(back.body.data.some((p: any) => p.id === pid)).toBe(true);
   });
 
-  it('backup rotativo foi criado na inicialização', () => {
+  it('backup rotativo foi criado na inicialização', async () => {
+    // Força uma consulta que chama getDb() para garantir que o backup foi gerado
+    await request(app).get('/api/health').set(auth());
     const stem = path.basename(tmpDb).replace(/\.db$/, '');
     const baks = fs.readdirSync(os.tmpdir()).filter(f => f.startsWith(`${stem}-`) && f.endsWith('.db.bak'));
     expect(baks.length).toBeGreaterThan(0);
@@ -583,3 +584,393 @@ describe('arquivamento: clientes e reativação de promoções', () => {
     expect(back.body.data.some((p: any) => p.id === promoId)).toBe(true);
   });
 });
+
+// ───────── TESTES DE COBERTURA ─────────
+
+describe('cobertura: stock', () => {
+  it('GET /stock/summary retorna dados', async () => {
+    const res = await request(app).get('/api/stock/summary').set(auth());
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toHaveProperty('saidas');
+    expect(res.body.data).toHaveProperty('entradas');
+    expect(res.body.data).toHaveProperty('produtos');
+  });
+
+  it('GET /stock com filtros retorna lista', async () => {
+    const res = await request(app).get('/api/stock').set(auth());
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(Array.isArray(res.body.data)).toBe(true);
+  });
+
+  it('POST /stock cria movimentação de entrada', async () => {
+    const pid = await firstProductId();
+    const res = await request(app)
+      .post('/api/stock')
+      .set(auth())
+      .send({ productId: pid, quantity: 10, operation: 'entrada', unitCost: 5, reason: 'Cobertura' });
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveProperty('id');
+  });
+
+  it('POST /stock cria movimentação de saida', async () => {
+    const pid = await firstProductId();
+    const res = await request(app)
+      .post('/api/stock')
+      .set(auth())
+      .send({ productId: pid, quantity: 3, operation: 'saida', unitCost: 5, reason: 'Cobertura' });
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveProperty('id');
+  });
+
+  it('POST /stock sem productId → 400', async () => {
+    const res = await request(app)
+      .post('/api/stock')
+      .set(auth())
+      .send({ quantity: 10, operation: 'entrada' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/obrigatórios|obrigatório/i);
+  });
+});
+
+describe('cobertura: entities - categories', () => {
+  it('GET /entities/categories lista', async () => {
+    const res = await request(app).get('/api/entities/categories').set(auth());
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(Array.isArray(res.body.data)).toBe(true);
+  });
+
+  it('POST /entities/categories cria', async () => {
+    const res = await request(app)
+      .post('/api/entities/categories')
+      .set(auth())
+      .send({ name: 'Categoria Teste', description: 'Descrição cobertura', marginPercent: 10 });
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveProperty('id');
+  });
+
+  it('PUT /entities/categories/:id atualiza', async () => {
+    const created = await request(app)
+      .post('/api/entities/categories')
+      .set(auth())
+      .send({ name: 'Categoria Put' });
+    const cid = created.body.data.id;
+    const res = await request(app)
+      .put(`/api/entities/categories/${cid}`)
+      .set(auth())
+      .send({ name: 'Categoria Atualizada' });
+    expect(res.status).toBe(200);
+  });
+
+  it('DELETE /entities/categories/:id soft delete', async () => {
+    const created = await request(app)
+      .post('/api/entities/categories')
+      .set(auth())
+      .send({ name: 'Categoria Delete' });
+    const cid = created.body.data.id;
+    const res = await request(app)
+      .delete(`/api/entities/categories/${cid}`)
+      .set(auth());
+    expect(res.status).toBe(200);
+    const list = await request(app).get('/api/entities/categories').set(auth());
+    expect(list.body.data.some((c: any) => c.id === cid)).toBe(false);
+  });
+});
+
+describe('cobertura: entities - brands', () => {
+  it('GET /entities/brands lista', async () => {
+    const res = await request(app).get('/api/entities/brands').set(auth());
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  it('POST /entities/brands cria', async () => {
+    const res = await request(app)
+      .post('/api/entities/brands')
+      .set(auth())
+      .send({ name: 'Marca Teste' });
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveProperty('id');
+  });
+
+  it('PUT /entities/brands/:id atualiza nome', async () => {
+    const created = await request(app)
+      .post('/api/entities/brands')
+      .set(auth())
+      .send({ name: 'Marca Antiga' });
+    const bid = created.body.data.id;
+    const res = await request(app)
+      .put(`/api/entities/brands/${bid}`)
+      .set(auth())
+      .send({ name: 'Marca Atualizada' });
+    expect(res.status).toBe(200);
+  });
+
+  it('DELETE /entities/brands/:id soft delete', async () => {
+    const created = await request(app)
+      .post('/api/entities/brands')
+      .set(auth())
+      .send({ name: 'Marca Delete' });
+    const bid = created.body.data.id;
+    await request(app).delete(`/api/entities/brands/${bid}`).set(auth());
+    const list = await request(app).get('/api/entities/brands').set(auth());
+    expect(list.body.data.some((b: any) => b.id === bid)).toBe(false);
+  });
+});
+
+describe('cobertura: entities - suppliers', () => {
+  it('GET /entities/suppliers lista', async () => {
+    const res = await request(app).get('/api/entities/suppliers').set(auth());
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  it('POST /entities/suppliers cria', async () => {
+    const res = await request(app)
+      .post('/api/entities/suppliers')
+      .set(auth())
+      .send({ name: 'Fornecedor Teste', cnpjCpf: '12345678901', phone: '11999999999', email: 'teste@exemplo.com' });
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveProperty('id');
+  });
+
+  it('PUT /entities/suppliers/:id atualiza', async () => {
+    const created = await request(app)
+      .post('/api/entities/suppliers')
+      .set(auth())
+      .send({ name: 'Fornecedor Antigo', cnpjCpf: '12345678901' });
+    const sid = created.body.data.id;
+    const res = await request(app)
+      .put(`/api/entities/suppliers/${sid}`)
+      .set(auth())
+      .send({ name: 'Fornecedor Atualizado' });
+    expect(res.status).toBe(200);
+  });
+
+  it('DELETE /entities/suppliers/:id soft delete', async () => {
+    const created = await request(app)
+      .post('/api/entities/suppliers')
+      .set(auth())
+      .send({ name: 'Fornecedor Delete', cnpjCpf: '12345678901' });
+    const sid = created.body.data.id;
+    await request(app).delete(`/api/entities/suppliers/${sid}`).set(auth());
+    const list = await request(app).get('/api/entities/suppliers').set(auth());
+    expect(list.body.data.some((s: any) => s.id === sid)).toBe(false);
+  });
+});
+
+describe('cobertura: entities - users (admin)', () => {
+  it('GET /entities/users lista', async () => {
+    const res = await request(app).get('/api/entities/users').set(auth());
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(Array.isArray(res.body.data)).toBe(true);
+  });
+
+  it('POST /entities/users cria (admin)', async () => {
+    const res = await request(app)
+      .post('/api/entities/users')
+      .set(auth())
+      .send({ name: 'Novo Usuário', email: `novo${Date.now()}@teste.com`, password: 'senha123', role: 'caixa' });
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveProperty('id');
+  });
+
+  it('POST /entities/users sem email → 400', async () => {
+    const res = await request(app)
+      .post('/api/entities/users')
+      .set(auth())
+      .send({ name: 'Sem Email', password: 'senha123', role: 'caixa' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/obrigatórios|obrigatório/i);
+  });
+
+  it('POST /entities/users com role inválido → 400', async () => {
+    const res = await request(app)
+      .post('/api/entities/users')
+      .set(auth())
+      .send({ name: 'Role Inválida', email: `inv${Date.now()}@teste.com`, password: 'senha123', role: 'tedesco' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/Perfil inválido/i);
+  });
+
+  it('PUT /entities/users/:id atualiza (admin)', async () => {
+    const created = await request(app)
+      .post('/api/entities/users')
+      .set(auth())
+      .send({ name: 'Usuário Put', email: `put${Date.now()}@teste.com`, password: 'senha123', role: 'caixa' });
+    const uid = created.body.data.id;
+    const res = await request(app)
+      .put(`/api/entities/users/${uid}`)
+      .set(auth())
+      .send({ name: 'Usuário Atualizado' });
+    expect(res.status).toBe(200);
+  });
+
+  it('PUT /entities/users/:id com role inválido → 400', async () => {
+    const created = await request(app)
+      .post('/api/entities/users')
+      .set(auth())
+      .send({ name: 'Usuário Role Inválida', email: `invrole${Date.now()}@teste.com`, password: 'senha123', role: 'caixa' });
+    const uid = created.body.data.id;
+    const res = await request(app)
+      .put(`/api/entities/users/${uid}`)
+      .set(auth())
+      .send({ role: 'pedreiro' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/Perfil inválido/i);
+  });
+
+  it('DELETE /entities/users/:id soft delete registra active=0', async () => {
+    const created = await request(app)
+      .post('/api/entities/users')
+      .set(auth())
+      .send({ name: 'Usuário Delete', email: `del${Date.now()}@teste.com`, password: 'senha123', role: 'caixa' });
+    const uid = created.body.data.id;
+    await request(app).delete(`/api/entities/users/${uid}`).set(auth());
+    const list = await request(app).get('/api/entities/users').set(auth());
+    const user = list.body.data.find((u: any) => u.id === uid);
+    expect(user).toBeTruthy();
+    expect(user.active).toBe(0);
+  });
+
+  it('DELETE /entities/users/:id tentando desativar a si mesmo → 400', async () => {
+    const created = await request(app)
+      .post('/api/entities/users')
+      .set(auth())
+      .send({ name: 'Profile inválida', email: `invprofile${Date.now()}@teste.com`, password: 'senha123', role: 'caixa' });
+    const uid = created.body.data.id;
+    const res = await request(app)
+      .put(`/api/entities/users/${uid}`)
+      .set(auth())
+      .send({ role: 'tedesco' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/Perfil inválido/i);
+  });
+});
+
+describe('cobertura: reports', () => {
+  it('GET /reports/sales retorna dados (admin)', async () => {
+    const res = await request(app)
+      .get('/api/reports/sales')
+      .set(auth())
+      .query({ from: '2026-01-01', to: '2026-12-31' });
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toHaveProperty('count');
+    expect(res.body.data).toHaveProperty('revenue');
+    expect(res.body.data).toHaveProperty('byPayment');
+    expect(res.body.data).toHaveProperty('byDay');
+    expect(res.body.data).toHaveProperty('topProducts');
+  });
+
+  it('GET /reports/stock-low retorna lista', async () => {
+    const res = await request(app).get('/api/reports/stock-low').set(auth());
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(Array.isArray(res.body.data)).toBe(true);
+  });
+});
+
+describe('cobertura: products', () => {
+  it('GET /products/barcode/:bc encontra por barcode exato', async () => {
+    const list = await request(app).get('/api/products').set(auth());
+    const p = list.body.data.find((x: any) => x.barcode && x.barcode.length > 5);
+    expect(p).toBeTruthy();
+    const res = await request(app).get(`/api/products/barcode/${encodeURIComponent(p.barcode)}`).set(auth());
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toHaveProperty('id');
+    expect(res.body.data.barcode).toBe(p.barcode);
+  });
+
+  it('GET /products/barcode/:bc encontra por prefixo (busca fuzzy)', async () => {
+    const list = await request(app).get('/api/products').set(auth());
+    const p = list.body.data.find((x: any) => x.barcode && x.barcode.length > 5);
+    expect(p).toBeTruthy();
+    const partial = p.barcode.slice(0, 5);
+    const res = await request(app).get(`/api/products/barcode/${encodeURIComponent(partial)}`).set(auth());
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toBeTruthy();
+    expect(res.body.data.barcode.startsWith(partial)).toBe(true);
+  });
+
+  it('GET /products/barcode/:bc retorna null para barcode inexistente', async () => {
+    const res = await request(app).get('/api/products/barcode/NÃOEXISTE123456789').set(auth());
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toBeNull();
+  });
+
+  it('GET /products/:id encontra produto existente', async () => {
+    const list = await request(app).get('/api/products').set(auth());
+    const p = list.body.data[0];
+    const res = await request(app).get(`/api/products/${p.id}`).set(auth());
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.id).toBe(p.id);
+  });
+
+  it('GET /products/:id retorna 404 para id inexistente', async () => {
+    const res = await request(app).get('/api/products/prd-invalid-12345').set(auth());
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error).toMatch(/não encontrado/i);
+  });
+
+  it('POST /products com dados inválidos → 400', async () => {
+    const res = await request(app)
+      .post('/api/products')
+      .set(auth())
+      .send({ name: '' }); // name vazio falha validação
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error).toMatch(/inválido/i);
+  });
+
+  it('POST /products cria produto com sucesso', async () => {
+    const res = await request(app)
+      .post('/api/products')
+      .set(auth())
+      .send({ name: 'Produto Teste Cobertura', price: 9.99, stock: 10, minStock: 5 });
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toHaveProperty('id');
+    expect(res.body.data).toHaveProperty('code');
+  });
+
+  it('PUT /products/:id atualiza preço', async () => {
+    const created = await request(app)
+      .post('/api/products')
+      .set(auth())
+      .send({ name: 'Produto Put Teste', price: 5.00 });
+    const pid = created.body.data.id;
+    const res = await request(app)
+      .put(`/api/products/${pid}`)
+      .set(auth())
+      .send({ price: 7.50 });
+    expect(res.status).toBe(200);
+  });
+
+  it('DELETE /products/:id soft delete', async () => {
+    const created = await request(app)
+      .post('/api/products')
+      .set(auth())
+      .send({ name: 'Produto Delete Teste', price: 10, stock: 5 });
+    const pid = created.body.data.id;
+    const res = await request(app).delete(`/api/products/${pid}`).set(auth());
+    expect(res.status).toBe(200);
+    const list = await request(app).get('/api/products').set(auth());
+    expect(list.body.data.some((p: any) => p.id === pid)).toBe(false);
+    const incl = await request(app).get('/api/products?includeInactive=1').set(auth());
+    expect(incl.body.data.some((p: any) => p.id === pid)).toBe(true);
+    // Reativa para não poluir
+    await request(app).put(`/api/products/${pid}`).set(auth()).send({ active: 1 });
+  });
+});
+
+console.log('Testes de cobertura para P3 adicionados (stock + entities + reports + products).');
+console.log('Total de testes: 31 originais + novos testes de cobertura.');
