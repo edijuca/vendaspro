@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VendasPRO — Mockup</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23f97316' rx='18' width='100' height='100'/><text x='50' y='68' text-anchor='middle' font-size='56' fill='white' font-family='sans-serif' font-weight='bold'>V</text></svg>" />
+  <link rel="stylesheet" href="src/global.css" />
+  <style>
+    /* ================================================
+       Suplemento do mockup — apenas utilitários usados
+       no JSX que NÃO existem no global.css original.
+       Nenhuma regra do global.css foi modificada.
+       ================================================ */
+    .absolute { position: absolute; }
+    .min-w-0 { min-width: 0; }
+    .overflow-auto { overflow: auto; }
+    .mt-auto { margin-top: auto; }
+    .space-y-2 > * + * { margin-top: 0.5rem; }
+    .space-y-3 > * + * { margin-top: 0.75rem; }
+    .space-y-4 > * + * { margin-top: 1rem; }
+    .capitalize { text-transform: capitalize; }
+    .animate-spin { animation: spin 0.7s linear infinite; }
+    .border-2 { border-width: 2px; border-style: solid; }
+    .border-3 { border-width: 3px; border-style: solid; }
+    .border-t-transparent { border-top-color: transparent; }
+    .border-t-white { border-top-color: #fff; }
+    .border-white\/30 { border-color: rgba(255, 255, 255, 0.3); }
+    .w-4 { width: 1rem; } .h-4 { height: 1rem; }
+    .w-7 { width: 1.75rem; } .h-7 { height: 1.75rem; }
+    .pt-2 { padding-top: 0.5rem; }
+    .pt-4 { padding-top: 1rem; }
+    .mb-8 { margin-bottom: 2rem; }
+    .mt-0\.5 { margin-top: 0.125rem; }
+    .py-1\.5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+    .pr-1 { padding-right: 0.25rem; }
+    .pl-8 { padding-left: 2rem; }
+    .h-32 { height: 8rem; }
+    .text-\[10px\] { font-size: 10px; }
+    .col-span-full { grid-column: 1 / -1; }
+    .h-\[calc\(100vh-6rem\)\] { height: calc(100vh - 6rem); }
+    .max-h-\[320px\] { max-height: 320px; }
+    .left-2\.5 { left: 0.625rem; }
+    .top-1\/2 { top: 50%; }
+    .-translate-y-1\/2 { transform: translateY(-50%); }
+    .transition-colors { transition: background-color 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s; }
+    .transition-shadow { transition: box-shadow 0.15s; }
+    .text-slate-600 { color: #475569; }
+    .bg-rose-100 { background-color: #ffe4e6; } .text-rose-700 { color: #be123c; }
+    .bg-amber-100 { background-color: #fef3c7; } .text-amber-700 { color: #b45309; }
+    .bg-blue-100 { background-color: #dbeafe; } .text-blue-700 { color: #1d4ed8; }
+    .bg-purple-100 { background-color: #f3e8ff; } .text-purple-700 { color: #7e22ce; }
+    .bg-emerald-100 { background-color: #d1fae5; } .text-emerald-700 { color: #047857; }
+    .border-slate-50 { border-color: #f8fafc; }
+    .hover\:bg-slate-50:hover { background-color: #f8fafc; }
+    .last\:border-0:last-child { border-bottom-width: 0; }
+    @media (min-width: 640px) { .sm\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 768px) { .md\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); } }
+    .page { display: none; }
+    .page.active { display: block; }
+    .overlay { display: none; }
+    .overlay.open { display: flex; }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════ LOGIN ══════════════════ -->
+  <div id="screen-login" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-white px-4">
+    <div class="w-full max-w-sm">
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-14 h-14 bg-orange-500 rounded-2xl mb-3">
+          <span class="text-2xl font-bold text-white">V</span>
+        </div>
+        <h1 class="text-2xl font-bold text-slate-800">VendasPRO</h1>
+        <p class="text-sm text-slate-500 mt-1">Sistema de Gestão Simples</p>
+      </div>
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+        <h2 class="text-lg font-semibold text-slate-800 mb-1">Entrar na conta</h2>
+        <p class="text-xs text-slate-500 mb-5">Bem-vindo de volta!</p>
+        <form id="login-form" class="space-y-4">
+          <div>
+            <label class="label">E-mail</label>
+            <input type="email" class="input" placeholder="seu@email.com" id="login-email" required />
+          </div>
+          <div>
+            <label class="label">Senha</label>
+            <input type="password" class="input" placeholder="••••••••" id="login-pass" required />
+          </div>
+          <button type="submit" class="btn btn-primary w-full btn-lg">Entrar</button>
+        </form>
+        <div class="mt-5 pt-4 border-t border-slate-100">
+          <p class="text-xs text-slate-400 text-center mb-2">Credenciais de teste:</p>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <button type="button" class="bg-slate-50 hover:bg-slate-100 rounded-lg px-2 py-1.5 text-slate-600 text-left transition-colors" data-demo="admin">
+              👑 Admin
+            </button>
+            <button type="button" class="bg-slate-50 hover:bg-slate-100 rounded-lg px-2 py-1.5 text-slate-600 text-left transition-colors" data-demo="caixa">
+              🧾 Caixa
+            </button>
+          </div>
+        </div>
+      </div>
+      <p class="text-center text-xs text-slate-400 mt-6">© 2024 VendasPRO — Sistema de Gestão</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════ APP ══════════════════ -->
+  <div id="screen-app" style="display:none" class="min-h-screen bg-slate-50">
+
+    <!-- Sidebar -->
+    <div class="flex min-h-screen bg-slate-50">
+      <aside class="w-16 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col items-center py-3 gap-1 sticky top-0" style="height:100vh">
+        <div class="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center mb-2">
+          <span class="text-lg font-bold text-white">V</span>
+        </div>
+        <button class="nav-btn" data-page="pdv" title="PDV">🛒</button>
+        <button class="nav-btn" data-page="dashboard" title="Dashboard">📊</button>
+        <button class="nav-btn" data-page="produtos" title="Produtos">📦</button>
+        <button class="nav-btn" data-page="estoque" title="Estoque">📋</button>
+        <button class="nav-btn" data-page="vendas" title="Vendas">💰</button>
+        <button class="nav-btn" data-page="clientes" title="Clientes">👥</button>
+        <button class="nav-btn" data-page="caixa" title="Caixa">💵</button>
+        <button class="nav-btn" data-page="configuracoes" title="Config.">⚙️</button>
+        <div class="flex-1"></div>
+        <div class="w-full px-2 mt-auto">
+          <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-2">
+            <div class="w-7 h-7 bg-orange-200 rounded-full flex items-center justify-center text-xs font-bold text-orange-700">A</div>
+            <div class="min-w-0">
+              <p class="text-xs font-medium text-slate-700 truncate">Admin</p>
+              <p class="text-[10px] text-slate-400 capitalize truncate">admin</p>
+            </div>
+          </div>
+          <button id="btn-logout" class="w-full text-center text-xs text-slate-400 hover:text-red-500 mt-2 py-1 rounded hover:bg-slate-100 transition-colors">Sair</button>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main class="flex-1 min-w-0 p-4 overflow-auto" style="height:100vh;overflow-y:auto">
+        <header class="flex items-center justify-between mb-4">
+          <h2 id="header-title" class="text-lg font-semibold text-slate-800 capitalize">Ponto de Venda</h2>
+          <div class="flex items-center gap-3">
+            <span class="badge badge-success">Caixa: Aberto</span>
+            <span class="badge badge-neutral">MOCKUP</span>
+            <div class="text-right">
+              <p class="text-xs text-slate-500">Admin</p>
+              <p class="text-xs text-slate-400 capitalize">admin</p>
+            </div>
+          </div>
+        </header>
+
+        <!-- ── PDV ── -->
+        <section id="page-pdv" class="page active">
+          <div class="flex gap-4 h-[calc(100vh-6rem)]">
+            <div class="flex-1 min-w-0 flex flex-col">
+              <div class="flex gap-2 mb-3">
+                <div class="relative flex-1">
+                  <input class="input pl-8" placeholder="Buscar produto..." id="pdv-search" />
+                  <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
+                </div>
+              </div>
+              <div id="pdv-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 overflow-y-auto pr-1 flex-1"></div>
+            </div>
+            <div class="w-80 flex-shrink-0 flex flex-col">
+              <div class="bg-white rounded-xl border border-slate-200 overflow-hidden flex-1 flex flex-col">
+                <div class="p-3 border-b border-slate-100 flex items-center justify-between">
+                  <h3 class="font-semibold text-slate-700">Carrinho</h3>
+                  <button id="cart-clear" class="text-xs text-orange-600 hover:text-orange-700 font-medium" style="visibility:hidden">Limpar</button>
+                </div>
+                <div class="flex-1 overflow-y-auto max-h-[320px]" id="cart-items"></div>
+                <div class="p-3 border-t border-slate-100 bg-slate-50">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm text-slate-600">Subtotal</span>
+                    <span class="text-sm font-semibold text-slate-700" id="cart-subtotal">R$ 0.00</span>
+                  </div>
+                  <button id="btn-finalize" class="btn btn-primary w-full btn-lg" disabled>Finalizar R$ 0.00</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Dashboard ── -->
+        <section id="page-dashboard" class="page">
+          <div class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="card text-center">
+                <p class="text-3xl mb-1">💰</p>
+                <p class="text-2xl font-bold text-slate-800" id="kpi-total">R$ 0.00</p>
+                <p class="text-xs text-slate-500">Vendas de hoje</p>
+              </div>
+              <div class="card text-center">
+                <p class="text-3xl mb-1">📦</p>
+                <p class="text-2xl font-bold text-slate-800">7</p>
+                <p class="text-xs text-slate-500">Produtos movimentados</p>
+              </div>
+              <div class="card text-center">
+                <p class="text-3xl mb-1">📊</p>
+                <p class="text-2xl font-bold text-slate-800" id="kpi-count">0</p>
+                <p class="text-xs text-slate-500">Vendas hoje</p>
+              </div>
+            </div>
+            <div class="card">
+              <h3 class="font-semibold text-slate-700 mb-3">Últimas vendas</h3>
+              <div id="dash-sales" class="space-y-2"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Produtos ── -->
+        <section id="page-produtos" class="page">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <input class="input w-80" placeholder="Buscar produto..." id="prod-search" />
+              <button class="btn btn-primary" id="btn-new-product">+ Novo Produto</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="bg-slate-50 text-left">
+                    <th class="px-3 py-2 text-slate-500 font-medium">Produto</th>
+                    <th class="px-3 py-2 text-slate-500 font-medium">Código</th>
+                    <th class="px-3 py-2 text-slate-500 font-medium">Marca</th>
+                    <th class="px-3 py-2 text-slate-500 font-medium text-right">Preço</th>
+                    <th class="px-3 py-2 text-slate-500 font-medium text-right">Estoque</th>
+                    <th class="px-3 py-2 text-slate-500 font-medium">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="prod-tbody"></tbody>
+              </table>
+              <p id="prod-empty" class="text-center text-slate-400 py-8" style="display:none">Nenhum produto cadastrado</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Estoque ── -->
+        <section id="page-estoque" class="page">
+          <div class="space-y-4">
+            <div class="grid grid-cols-3 gap-4">
+              <div class="card text-center"><p class="text-2xl mb-1">📤</p><p class="text-xl font-bold text-slate-800" id="stk-out">0</p><p class="text-xs text-slate-500">Saídas totais</p></div>
+              <div class="card text-center"><p class="text-2xl mb-1">📥</p><p class="text-xl font-bold text-slate-800" id="stk-in">0</p><p class="text-xs text-slate-500">Entradas totais</p></div>
+              <div class="card text-center"><p class="text-2xl mb-1">🏷️</p><p class="text-xl font-bold text-slate-800" id="stk-prod">0</p><p class="text-xs text-slate-500">Produtos afetados</p></div>
+            </div>
+            <div class="card">
+              <h3 class="font-semibold text-slate-700 mb-3">Movimentações Recentes</h3>
+              <div id="stk-list" class="space-y-2"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Vendas ── -->
+        <section id="page-vendas" class="page">
+          <div class="space-y-4">
+            <div class="flex items-center gap-3">
+              <span class="text-sm text-slate-500" id="vendas-count">0 vendas registradas</span>
+            </div>
+            <div class="card">
+              <h3 class="font-semibold text-slate-700 mb-3">Histórico de Vendas</h3>
+              <div id="vendas-list" class="space-y-2"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Clientes ── -->
+        <section id="page-clientes" class="page">
+          <div class="space-y-4">
+            <div class="flex items-center gap-3">
+              <input class="input w-80" placeholder="Buscar cliente..." id="cli-search" />
+              <button class="btn btn-primary" data-sim="Novo cliente">+ Novo Cliente</button>
+            </div>
+            <div class="card">
+              <h3 class="font-semibold text-slate-700 mb-3">Clientes</h3>
+              <div id="cli-list" class="grid gap-2"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Caixa ── -->
+        <section id="page-caixa" class="page">
+          <div class="space-y-4">
+            <div class="card">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="font-semibold text-slate-700">Caixa Atual</h3>
+                  <p class="text-sm text-slate-500 mt-1" id="caixa-info">Aberto em — por Admin</p>
+                  <div class="mt-3 grid grid-cols-2 gap-3">
+                    <div class="bg-orange-50 rounded-lg p-3 text-center">
+                      <p class="text-xs text-orange-600">Saldo Previsto</p>
+                      <p class="text-xl font-bold text-slate-800" id="caixa-balance">R$ 0.00</p>
+                    </div>
+                    <div class="bg-orange-50 rounded-lg p-3 text-center">
+                      <p class="text-xs text-orange-600">Vendas</p>
+                      <p class="text-xl font-bold text-slate-800" id="caixa-sales">R$ 0.00</p>
+                    </div>
+                  </div>
+                </div>
+                <button class="btn btn-danger" data-sim="Fechar caixa">Fechar Caixa</button>
+              </div>
+            </div>
+            <div class="card">
+              <h3 class="font-semibold text-slate-700 mb-3">Histórico de Caixas</h3>
+              <div id="caixa-history" class="space-y-2"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Configurações ── -->
+        <section id="page-configuracoes" class="page">
+          <div class="max-w-2xl space-y-4">
+            <div class="card">
+              <h3 class="font-semibold text-slate-700 mb-3">Dados da Empresa</h3>
+              <div class="space-y-3">
+                <div><label class="label">Razão Social</label><input class="input" id="set-name" /></div>
+                <div><label class="label">Nome Fantasia</label><input class="input" id="set-trade" /></div>
+                <div><label class="label">CNPJ</label><input class="input" id="set-cnpj" /></div>
+                <div><label class="label">Inscrição Estadual</label><input class="input" id="set-ie" /></div>
+                <div><label class="label">Endereço</label><input class="input" id="set-address" /></div>
+                <div><label class="label">Telefone</label><input class="input" id="set-phone" /></div>
+                <div><label class="label">E-mail</label><input class="input" id="set-email" /></div>
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                  <div><label class="label">Chave PIX</label><input class="input" id="set-pixkey" /></div>
+                  <div>
+                    <label class="label">Tipo PIX</label>
+                    <select class="select" id="set-pixtype">
+                      <option value="">Selecione</option>
+                      <option value="cnpj">CNPJ</option>
+                      <option value="cpf">CPF</option>
+                      <option value="email">E-mail</option>
+                      <option value="telefone">Telefone</option>
+                      <option value="aleatoria">Aleatória</option>
+                    </select>
+                  </div>
+                </div>
+                <div><label class="label">Nome Beneficiário PIX</label><input class="input" id="set-pixname" /></div>
+                <div><label class="label">Cidade PIX</label><input class="input" id="set-pixcity" /></div>
+              </div>
+            </div>
+            <div class="card">
+              <h3 class="font-semibold text-slate-700 mb-3">Configurações de Venda</h3>
+              <div class="space-y-3">
+                <div><label class="label">Margem Percentual Padrão (%)</label><input type="number" class="input" id="set-margin" /></div>
+                <div><label class="label">Taxa de Cartão (%)</label><input type="number" class="input" id="set-cardfee" /></div>
+              </div>
+            </div>
+            <button class="btn btn-primary w-full" id="btn-save-settings">Salvar Configurações</button>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ══════════════════ MODAL PAGAMENTO ══════════════════ -->
+  <div id="modal-pay" class="overlay fixed inset-0 bg-black/40 items-center justify-center z-50">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-sm mx-4 shadow-xl" style="margin:0 1rem">
+      <h3 class="text-lg font-semibold text-slate-800 mb-1">Pagamento</h3>
+      <p class="text-sm text-slate-500 mb-4">Total: <span id="pay-total">R$ 0.00</span></p>
+      <div class="grid grid-cols-2 gap-2 mb-5">
+        <button class="btn btn-secondary text-sm" data-pay="dinheiro">💵 dinheiro</button>
+        <button class="btn btn-secondary text-sm" data-pay="pix">📱 pix</button>
+        <button class="btn btn-secondary text-sm" data-pay="cartao_credito">💳 cartao credito</button>
+        <button class="btn btn-secondary text-sm" data-pay="cartao_debito">💳 cartao debito</button>
+      </div>
+      <button class="btn btn-ghost w-full text-sm" id="pay-cancel">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════ MODAL PRODUTO ══════════════════ -->
+  <div id="modal-product" class="overlay fixed inset-0 bg-black/30 items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-5 w-full max-w-md mx-4 shadow-xl" style="margin:0 1rem">
+      <h3 class="font-semibold text-slate-700 mb-3" id="prod-form-title">Novo Produto</h3>
+      <div class="space-y-3">
+        <div><label class="label">Nome</label><input class="input" id="pf-name" /></div>
+        <div><label class="label">Código de Barras</label><input class="input" id="pf-barcode" /></div>
+        <div><label class="label">SKU</label><input class="input" id="pf-sku" /></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="label">Categoria</label><input class="input" id="pf-category" /></div>
+          <div><label class="label">Marca</label><input class="input" id="pf-brand" /></div>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div><label class="label">Preço (R$)</label><input type="number" class="input" id="pf-price" /></div>
+          <div><label class="label">Custo (R$)</label><input type="number" class="input" id="pf-cost" /></div>
+          <div><label class="label">Estoque</label><input type="number" class="input" id="pf-stock" /></div>
+        </div>
+        <div><label class="label">Estoque Mínimo</label><input type="number" class="input" id="pf-min" /></div>
+        <div>
+          <label class="label">Tipo</label>
+          <select class="select" id="pf-icon">
+            <option value="general"> geral</option>
+            <option value="drink">Bebida</option>
+            <option value="snack">Snack</option>
+            <option value="candy">Doce</option>
+            <option value="coffee">Café</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button class="btn btn-primary flex-1" id="pf-save">Salvar</button>
+        <button class="btn btn-secondary" id="pf-cancel">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ═══════════ DADOS FICTÍCIOS (base: seed do server/index.ts) ═══════════ */
+    const ICONS = { drink:'🥤', snack:'🍪', candy:'🍬', coffee:'☕', dairy:'🥛', bakery:'🍞', general:'📦' };
+
+    const PRODUCTS = [
+      { id:'prd-1',  code:'PRD-000001', name:'Coca-Cola Lata 350ml',          barcode:'7896001051156', sku:'CCO-350',     category:'Bebidas', brand:'Coca-Cola', unit:'UN', price:5.50,  costPrice:3.20, stock:50,  minStock:10, iconType:'drink',  colorTheme:'orange'  },
+      { id:'prd-2',  code:'PRD-000002', name:'Coca-Cola 600ml',               barcode:'7896001051118', sku:'CCO-600',     category:'Bebidas', brand:'Coca-Cola', unit:'UN', price:7.50,  costPrice:4.20, stock:30,  minStock:8,  iconType:'drink',  colorTheme:'blue'    },
+      { id:'prd-3',  code:'PRD-000003', name:'Guarana Antarctica 350ml',      barcode:'7896001051262', sku:'GUA-350',     category:'Bebidas', brand:'Pepsi',     unit:'UN', price:5.50,  costPrice:3.10, stock:40,  minStock:10, iconType:'drink',  colorTheme:'emerald' },
+      { id:'prd-4',  code:'PRD-000004', name:'Brahma 600ml',                  barcode:'7896001051460', sku:'BRA-600',     category:'Bebidas', brand:'Garoto',    unit:'UN', price:8.50,  costPrice:4.50, stock:20,  minStock:5,  iconType:'drink',  colorTheme:'amber'   },
+      { id:'prd-5',  code:'PRD-000005', name:'Snack Chips BBQ 50g',           barcode:'',              sku:'CHP-BBQ',     category:'Snacks',  brand:'Premius',   unit:'UN', price:4.50,  costPrice:2.20, stock:60,  minStock:15, iconType:'snack',  colorTheme:'rose'    },
+      { id:'prd-6',  code:'PRD-000006', name:'Sanduíche Natural Frango 240g', barcode:'',              sku:'SAN-FRANGO',  category:'Snacks',  brand:'Arisco',    unit:'UN', price:9.90,  costPrice:5.00, stock:25,  minStock:8,  iconType:'snack',  colorTheme:'purple'  },
+      { id:'prd-7',  code:'PRD-000007', name:'Água Comfort 500ml',            barcode:'7891020750023', sku:'AGU-500',     category:'Bebidas', brand:'',          unit:'UN', price:3.50,  costPrice:1.80, stock:100, minStock:20, iconType:'drink',  colorTheme:'blue'    },
+      { id:'prd-8',  code:'PRD-000008', name:'Paçoca 50g',                    barcode:'',              sku:'PAC-50',      category:'Snacks',  brand:'',          unit:'UN', price:3.00,  costPrice:1.50, stock:80,  minStock:20, iconType:'candy',  colorTheme:'amber'   },
+      { id:'prd-9',  code:'PRD-000009', name:'Biscoito Maizena Recheado',     barcode:'',              sku:'BIS-MAIZENA', category:'Snacks',  brand:'',          unit:'UN', price:3.50,  costPrice:1.80, stock:12,  minStock:15, iconType:'snack',  colorTheme:'orange'  },
+      { id:'prd-10', code:'PRD-000010', name:'Balas Pirulito 14g',            barcode:'',              sku:'BALA-PIRU',   category:'Snacks',  brand:'',          unit:'UN', price:1.50,  costPrice:0.80, stock:200, minStock:30, iconType:'candy',  colorTheme:'rose'    },
+    ];
+
+    function todayAt(h, m, dayOffset = 0) {
+      const d = new Date();
+      d.setDate(d.getDate() + dayOffset);
+      d.setHours(h, m, 0, 0);
+      return d.toISOString();
+    }
+
+    const SALES = [
+      { id:'v1', code:'VND-000001', timestamp:todayAt(8, 32),  operator:'Admin', subtotal:18.50, discount:0, total:18.50, paymentMethod:'pix',            customerName:'Consumidor Final', status:'concluida' },
+      { id:'v2', code:'VND-000002', timestamp:todayAt(9, 15),  operator:'Caixa', subtotal:32.00, discount:0, total:32.00, paymentMethod:'dinheiro',       customerName:'João da Silva',    status:'concluida' },
+      { id:'v3', code:'VND-000003', timestamp:todayAt(10, 5),  operator:'Admin', subtotal:7.50,  discount:0, total:7.50,  paymentMethod:'cartao_debito',  customerName:'Consumidor Final', status:'concluida' },
+      { id:'v4', code:'VND-000004', timestamp:todayAt(11, 20), operator:'Caixa', subtotal:45.90, discount:0, total:45.90, paymentMethod:'pix',            customerName:'Padaria do Zé',    status:'concluida' },
+      { id:'v5', code:'VND-000005', timestamp:todayAt(14, 2),  operator:'Admin', subtotal:24.40, discount:0, total:24.40, paymentMethod:'cartao_credito', customerName:'Maria Souza',      status:'concluida' },
+      { id:'v6', code:'VND-000006', timestamp:todayAt(16, 45), operator:'Caixa', subtotal:12.00, discount:0, total:12.00, paymentMethod:'dinheiro',       customerName:'Consumidor Final', status:'cancelada' },
+      { id:'v7', code:'VND-000007', timestamp:todayAt(17, 10, -1), operator:'Caixa', subtotal:89.90, discount:5, total:84.90, paymentMethod:'pix',         customerName:'Ana Paula',        status:'concluida' },
+    ];
+
+    const CUSTOMERS = [
+      { id:'c0', name:'Consumidor Final (Sem CPF)', cpf:'', email:'', phone:'', creditLimit:0,    currentDebt:0,     creditStatus:'liberado',     dueDays:0  },
+      { id:'c1', name:'João da Silva',              cpf:'123.456.789-00', email:'joao@email.com',  phone:'(11) 99999-0001', creditLimit:500,  currentDebt:120.50, creditStatus:'liberado',     dueDays:30 },
+      { id:'c2', name:'Maria Souza',                cpf:'987.654.321-00', email:'maria@email.com', phone:'(11) 99999-0002', creditLimit:300,  currentDebt:310.00, creditStatus:'inadimplente', dueDays:15 },
+      { id:'c3', name:'Padaria do Zé',              cpf:'11.222.333/0001-44', email:'',             phone:'(11) 3333-4444',  creditLimit:1000, currentDebt:0,      creditStatus:'liberado',     dueDays:30 },
+      { id:'c4', name:'Ana Paula',                  cpf:'', email:'ana@email.com', phone:'(11) 99999-0004', creditLimit:200, currentDebt:50.00, creditStatus:'suspenso',    dueDays:30 },
+    ];
+
+    const MOVEMENTS = [
+      { id:'m1', code:'MOV-000001', productName:'Coca-Cola Lata 350ml',   operation:'entrada', quantity:50,  reason:'Compra de fornecedor',  timestamp:todayAt(7, 30, -2) },
+      { id:'m2', code:'MOV-000002', productName:'Paçoca 50g',             operation:'entrada', quantity:80,  reason:'Compra de fornecedor',  timestamp:todayAt(7, 35, -2) },
+      { id:'m3', code:'MOV-000003', productName:'Coca-Cola Lata 350ml',   operation:'saida',   quantity:12,  reason:'Vendas do dia',         timestamp:todayAt(12, 0, -1) },
+      { id:'m4', code:'MOV-000004', productName:'Balas Pirulito 14g',     operation:'saida',   quantity:30,  reason:'Vendas do dia',         timestamp:todayAt(12, 5, -1) },
+      { id:'m5', code:'MOV-000005', productName:'Biscoito Maizena Recheado', operation:'saida', quantity:8,   reason:'Venda VND-000004',      timestamp:todayAt(11, 22) },
+      { id:'m6', code:'MOV-000006', productName:'Água Comfort 500ml',     operation:'entrada', quantity:100, reason:'Compra de fornecedor',  timestamp:todayAt(8, 10) },
+      { id:'m7', code:'MOV-000007', productName:'Snack Chips BBQ 50g',    operation:'saida',   quantity:5,   reason:'Venda VND-000005',      timestamp:todayAt(14, 5) },
+    ];
+
+    const REGISTERS = [
+      { id:'REG-000002', openedAt:todayAt(7, 55), closedAt:null,                     openingBalance:200, balance:628.30, salesTotal:428.30, status:'aberto',  operator:'Admin' },
+      { id:'REG-000001', openedAt:todayAt(8, 0, -1), closedAt:todayAt(18, 30, -1),   openingBalance:150, balance:999.90, salesTotal:849.90, status:'fechado', operator:'Caixa' },
+      { id:'REG-000000', openedAt:todayAt(8, 5, -2), closedAt:todayAt(18, 0, -2),    openingBalance:150, balance:764.20, salesTotal:614.20, status:'fechado', operator:'Admin' },
+    ];
+
+    const SETTINGS = {
+      name:'VendasPRO', tradeName:'Minha Loja', cnpj:'12.345.678/0001-90',
+      ie:'111.222.333.111', address:'Rua das Flores, 123 — Centro',
+      phone:'(11) 3333-4444', email:'contato@minhalojoja.com.br',
+      pixKey:'12345678900', pixKeyType:'cpf', pixBeneficiaryName:'Minha Loja Ltda',
+      pixCity:'São Paulo', defaultMarginPercent:40, cardFeePercent:3,
+    };
+
+    /* ═══════════ HELPERS ═══════════ */
+    const $ = (s) => document.querySelector(s);
+    const $$ = (s) => document.querySelectorAll(s);
+    const brl = (n) => 'R$ ' + Number(n).toFixed(2);
+    const dtbr = (iso) => new Date(iso).toLocaleString('pt-BR');
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+    /* ═══════════ LOGIN ═══════════ */
+    function doLogin() {
+      $('#screen-login').style.display = 'none';
+      $('#screen-app').style.display = 'block';
+      go('pdv');
+    }
+    function doLogout() {
+      $('#screen-app').style.display = 'none';
+      $('#screen-login').style.display = '';
+    }
+    $('#login-form').addEventListener('submit', (e) => { e.preventDefault(); doLogin(); });
+    $$('[data-demo]').forEach((b) => b.addEventListener('click', () => {
+      const admin = b.dataset.demo === 'admin';
+      $('#login-email').value = admin ? 'admin@vendaspro.com' : 'caixa@vendaspro.com';
+      $('#login-pass').value = 'admin123';
+      doLogin();
+    }));
+    $('#btn-logout').addEventListener('click', doLogout);
+
+    /* ═══════════ NAVEGAÇÃO ═══════════ */
+    const TITLES = {
+      pdv:'Ponto de Venda', dashboard:'Dashboard', produtos:'Produtos', estoque:'Estoque',
+      vendas:'Vendas', clientes:'Clientes', caixa:'Caixa', configuracoes:'Configurações',
+    };
+    function go(page) {
+      $$('.page').forEach((p) => p.classList.remove('active'));
+      const el = $('#page-' + page);
+      if (el) el.classList.add('active');
+      $$('.nav-btn').forEach((b) => {
+        const on = b.dataset.page === page;
+        b.classList.toggle('bg-orange-500', on);
+        b.classList.toggle('text-white', on);
+        b.classList.toggle('shadow-sm', on);
+        b.classList.toggle('text-slate-500', !on);
+        b.classList.toggle('hover:bg-slate-100', !on);
+        b.classList.toggle('hover:text-slate-700', !on);
+      });
+      $('#header-title').textContent = TITLES[page] || page;
+      $('main').scrollTop = 0;
+    }
+    $$('.nav-btn').forEach((b) => {
+      b.className = 'nav-btn w-10 h-10 flex items-center justify-center rounded-lg text-lg transition-colors text-slate-500 hover:bg-slate-100 hover:text-slate-700';
+      b.addEventListener('click', () => go(b.dataset.page));
+    });
+
+    /* ═══════════ PDV ═══════════ */
+    let cart = [];
+
+    function stockBadge(p) {
+      if (p.stock === 0) return '<span class="badge badge-danger mt-1">Esgotado</span>';
+      const st = p.stock <= p.minStock ? 'warning' : 'success';
+      return `<span class="badge badge-${st} mt-1">${p.stock} em estoque</span>`;
+    }
+
+    function renderPDV(filter = '') {
+      const q = filter.toLowerCase();
+      const list = PRODUCTS.filter((p) => !q || p.name.toLowerCase().includes(q) || p.barcode.includes(q) || p.sku.toLowerCase().includes(q));
+      const grid = $('#pdv-grid');
+      if (!list.length) {
+        grid.innerHTML = '<div class="col-span-full text-center text-slate-400 py-8">Nenhum produto encontrado</div>';
+        return;
+      }
+      grid.innerHTML = list.map((p) => `
+        <div class="bg-white rounded-lg border border-slate-200 p-3 hover:shadow-sm transition-shadow">
+          <div class="flex items-start gap-2">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold bg-${p.colorTheme}-100 text-${p.colorTheme}-700">${ICONS[p.iconType] || ICONS.general}</div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-slate-800 truncate">${esc(p.name)}</p>
+              <p class="text-xs text-slate-500">${brl(p.price)}</p>
+              ${stockBadge(p)}
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm w-full mt-2" ${p.stock === 0 ? 'disabled' : ''} data-add="${p.id}">+ Adicionar</button>
+        </div>`).join('');
+      grid.querySelectorAll('[data-add]').forEach((btn) => btn.addEventListener('click', () => addToCart(btn.dataset.add)));
+    }
+
+    function addToCart(id) {
+      const p = PRODUCTS.find((x) => x.id === id);
+      if (!p) return;
+      const item = cart.find((c) => c.product.id === id);
+      if (item) { item.quantity += 1; item.total = item.quantity * p.price; }
+      else cart.push({ product: p, quantity: 1, unitPrice: p.price, total: p.price });
+      renderCart();
+    }
+    function removeFromCart(id) {
+      cart = cart.filter((c) => c.product.id !== id);
+      renderCart();
+    }
+    function clearCart() { cart = []; renderCart(); }
+
+    function renderCart() {
+      const box = $('#cart-items');
+      const subtotal = cart.reduce((s, i) => s + i.total, 0);
+      $('#cart-subtotal').textContent = brl(subtotal);
+      $('#btn-finalize').textContent = 'Finalizar ' + brl(subtotal);
+      $('#btn-finalize').disabled = cart.length === 0;
+      $('#cart-clear').style.visibility = cart.length ? 'visible' : 'hidden';
+      if (!cart.length) {
+        box.innerHTML = '<div class="p-6 text-center text-slate-400 text-sm"><p class="text-2xl mb-2">🛒</p><p>Adicione produtos ao carrinho</p></div>';
+        return;
+      }
+      box.innerHTML = '<ul class="divide-y divide-slate-100">' + cart.map((item, idx) => `
+        <li class="flex items-center justify-between p-3">
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-medium text-slate-700 truncate">${esc(item.product.name)}</p>
+            <p class="text-xs text-slate-500">${item.quantity}x ${brl(item.unitPrice)}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-sm font-semibold text-slate-700">${brl(item.total)}</p>
+            <button class="text-xs text-red-500 hover:text-red-600 mt-0.5" data-rm="${idx}">Remover</button>
+          </div>
+        </li>`).join('') + '</ul>';
+      box.querySelectorAll('[data-rm]').forEach((b) => b.addEventListener('click', () => removeFromCart(cart[+b.dataset.rm].product.id)));
+    }
+
+    $('#pdv-search').addEventListener('input', (e) => renderPDV(e.target.value));
+    $('#cart-clear').addEventListener('click', clearCart);
+    $('#btn-finalize').addEventListener('click', () => {
+      if (!cart.length) return;
+      $('#pay-total').textContent = brl(cart.reduce((s, i) => s + i.total, 0));
+      $('#modal-pay').classList.add('open');
+    });
+    $('#pay-cancel').addEventListener('click', () => $('#modal-pay').classList.remove('open'));
+    $$('[data-pay]').forEach((b) => b.addEventListener('click', () => {
+      alert('Venda simulada (mockup) — pagamento: ' + b.dataset.pay);
+      clearCart();
+      $('#modal-pay').classList.remove('open');
+    }));
+
+    /* ═══════════ DASHBOARD ═══════════ */
+    function renderDashboard() {
+      const isToday = (iso) => new Date(iso).toDateString() === new Date().toDateString();
+      const today = SALES.filter((s) => isToday(s.timestamp) && s.status === 'concluida');
+      $('#kpi-total').textContent = brl(today.reduce((s, v) => s + v.total, 0));
+      $('#kpi-count').textContent = today.length;
+      const box = $('#dash-sales');
+      if (!today.length) {
+        box.innerHTML = '<p class="text-slate-400 text-sm">Nenhuma venda registrada hoje</p>';
+        return;
+      }
+      box.innerHTML = today.slice(0, 10).map((s) => `
+        <div class="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+          <div>
+            <p class="text-sm font-medium text-slate-700">${s.code}</p>
+            <p class="text-xs text-slate-400">${dtbr(s.timestamp)} — ${s.operator}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-sm font-semibold text-slate-700">${brl(s.total)}</p>
+            <span class="badge badge-success text-xs">${s.paymentMethod}</span>
+          </div>
+        </div>`).join('');
+    }
+
+    /* ═══════════ PRODUTOS ═══════════ */
+    function renderProdutos(filter = '') {
+      const q = filter.toLowerCase();
+      const list = PRODUCTS.filter((p) => !q || p.name.toLowerCase().includes(q));
+      const tb = $('#prod-tbody');
+      $('#prod-empty').style.display = list.length ? 'none' : 'block';
+      tb.innerHTML = list.map((p) => `
+        <tr class="border-b border-slate-100 hover:bg-slate-50">
+          <td class="px-3 py-2">
+            <p class="font-medium text-slate-700">${esc(p.name)}</p>
+            <p class="text-xs text-slate-400">${p.barcode || '-'}</p>
+          </td>
+          <td class="px-3 py-2 text-slate-600">${p.code}</td>
+          <td class="px-3 py-2 text-slate-600">${p.brand || '-'}</td>
+          <td class="px-3 py-2 text-right font-medium text-slate-700">${brl(p.price)}</td>
+          <td class="px-3 py-2 text-right">
+            <span class="badge ${p.stock === 0 ? 'badge-danger' : p.stock <= p.minStock ? 'badge-warning' : 'badge-success'}">${p.stock}</span>
+          </td>
+          <td class="px-3 py-2">
+            <button class="text-xs text-orange-600 hover:text-orange-700 font-medium" data-edit="${p.id}">✏️</button>
+            <button class="text-xs text-red-500 hover:text-red-600 ml-1" data-del="${p.id}">🗑️</button>
+          </td>
+        </tr>`).join('');
+      tb.querySelectorAll('[data-edit]').forEach((b) => b.addEventListener('click', () => openProductForm(PRODUCTS.find((p) => p.id === b.dataset.edit))));
+      tb.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => alert('Exclusão simulada (mockup)')));
+    }
+
+    $('#prod-search').addEventListener('input', (e) => renderProdutos(e.target.value));
+    function openProductForm(p) {
+      $('#prod-form-title').textContent = p ? 'Editar Produto' : 'Novo Produto';
+      $('#pf-name').value = p ? p.name : '';
+      $('#pf-barcode').value = p ? p.barcode : '';
+      $('#pf-sku').value = p ? p.sku : '';
+      $('#pf-category').value = p ? p.category : '';
+      $('#pf-brand').value = p ? p.brand : '';
+      $('#pf-price').value = p ? p.price : 0;
+      $('#pf-cost').value = p ? p.costPrice : 0;
+      $('#pf-stock').value = p ? p.stock : 0;
+      $('#pf-min').value = p ? p.minStock : 0;
+      $('#pf-icon').value = p ? p.iconType : 'general';
+      $('#modal-product').classList.add('open');
+    }
+    $('#btn-new-product').addEventListener('click', () => openProductForm(null));
+    $('#pf-cancel').addEventListener('click', () => $('#modal-product').classList.remove('open'));
+    $('#pf-save').addEventListener('click', () => { alert('Produto salvo (mockup)'); $('#modal-product').classList.remove('open'); });
+
+    /* ═══════════ ESTOQUE ═══════════ */
+    function renderEstoque() {
+      $('#stk-out').textContent = MOVEMENTS.filter((m) => m.operation === 'saida').reduce((s, m) => s + m.quantity, 0);
+      $('#stk-in').textContent = MOVEMENTS.filter((m) => m.operation === 'entrada').reduce((s, m) => s + m.quantity, 0);
+      $('#stk-prod').textContent = new Set(MOVEMENTS.map((m) => m.productName)).size;
+      $('#stk-list').innerHTML = MOVEMENTS.slice(0, 20).map((m) => `
+        <div class="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+          <div>
+            <p class="text-sm font-medium text-slate-700">${esc(m.productName)}</p>
+            <p class="text-xs text-slate-400">${m.code} — ${dtbr(m.timestamp)}</p>
+          </div>
+          <div class="text-right">
+            <span class="badge ${m.operation === 'saida' ? 'badge-danger' : 'badge-success'} text-xs">${m.operation === 'saida' ? '-' : '+'}${m.quantity}</span>
+            <p class="text-xs text-slate-400 mt-1">${esc(m.reason)}</p>
+          </div>
+        </div>`).join('');
+    }
+
+    /* ═══════════ VENDAS ═══════════ */
+    function renderVendas() {
+      const done = SALES.filter((s) => s.status === 'concluida').length;
+      $('#vendas-count').textContent = done + ' vendas registradas';
+      $('#vendas-list').innerHTML = SALES.map((s) => `
+        <div class="flex items-center justify-between py-3 border-b border-slate-50 last:border-0">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <p class="font-semibold text-slate-700">${s.code}</p>
+              <span class="badge ${s.status === 'concluida' ? 'badge-success' : 'badge-danger'}">${s.status}</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">${dtbr(s.timestamp)} — ${s.operator}</p>
+            <p class="text-xs text-slate-400">${esc(s.customerName)}</p>
+          </div>
+          <div class="text-right flex items-center gap-3">
+            <div>
+              <p class="font-semibold text-slate-700">${brl(s.total)}</p>
+              <p class="text-xs text-slate-400">${s.paymentMethod}</p>
+            </div>
+            ${s.status === 'concluida' ? '<button class="btn btn-danger btn-sm" data-sim="Cancelar venda">Cancelar</button>' : ''}
+          </div>
+        </div>`).join('');
+      bindSim();
+    }
+
+    /* ═══════════ CLIENTES ═══════════ */
+    function renderClientes(filter = '') {
+      const q = filter.toLowerCase();
+      const list = CUSTOMERS.filter((c) => !q || c.name.toLowerCase().includes(q));
+      const cls = { liberado:'success', bloqueado:'danger', suspenso:'warning', inadimplente:'danger' };
+      $('#cli-list').innerHTML = list.map((c) => `
+        <div class="flex items-center justify-between p-3 border border-slate-100 rounded-lg hover:bg-slate-50">
+          <div>
+            <p class="font-medium text-slate-700">${esc(c.name)}</p>
+            <p class="text-xs text-slate-400">${c.cpf || '-'} ${c.email || ''} ${c.phone || ''}</p>
+            <p class="text-xs text-slate-400">Limite: ${brl(c.creditLimit)} | Divida: ${brl(c.currentDebt)} | ${c.dueDays || 30} dias</p>
+            <span class="badge badge-${cls[c.creditStatus] || 'neutral'} mt-1">${c.creditStatus}</span>
+          </div>
+          <button class="btn btn-ghost btn-sm" data-sim="Editar cliente">✏️</button>
+        </div>`).join('');
+      bindSim();
+    }
+    $('#cli-search').addEventListener('input', (e) => renderClientes(e.target.value));
+
+    /* ═══════════ CAIXA ═══════════ */
+    function renderCaixa() {
+      const cur = REGISTERS.find((r) => r.status === 'aberto');
+      if (cur) {
+        $('#caixa-info').textContent = 'Aberto em ' + dtbr(cur.openedAt) + ' por ' + cur.operator;
+        $('#caixa-balance').textContent = brl(cur.balance);
+        $('#caixa-sales').textContent = brl(cur.salesTotal);
+      }
+      $('#caixa-history').innerHTML = REGISTERS.map((r) => `
+        <div class="flex items-center justify-between p-3 border border-slate-100 rounded-lg">
+          <div>
+            <p class="font-medium text-slate-700">${r.id}</p>
+            <p class="text-xs text-slate-400">${dtbr(r.openedAt)} — ${r.operator}</p>
+            ${r.closedAt ? `<p class="text-xs text-slate-400">Fechado em ${dtbr(r.closedAt)}</p>` : ''}
+          </div>
+          <div class="text-right">
+            <span class="badge ${r.status === 'aberto' ? 'badge-success' : 'badge-neutral'}">${r.status === 'aberto' ? 'Aberto' : 'Fechado'}</span>
+            <p class="text-sm font-semibold text-slate-700 mt-1">Vendas: ${brl(r.salesTotal)}</p>
+            <p class="text-sm text-slate-500">Saldo: ${brl(r.balance)}</p>
+          </div>
+        </div>`).join('');
+    }
+
+    /* ═══════════ CONFIGURAÇÕES ═══════════ */
+    function renderConfig() {
+      $('#set-name').value = SETTINGS.name;
+      $('#set-trade').value = SETTINGS.tradeName;
+      $('#set-cnpj').value = SETTINGS.cnpj;
+      $('#set-ie').value = SETTINGS.ie;
+      $('#set-address').value = SETTINGS.address;
+      $('#set-phone').value = SETTINGS.phone;
+      $('#set-email').value = SETTINGS.email;
+      $('#set-pixkey').value = SETTINGS.pixKey;
+      $('#set-pixtype').value = SETTINGS.pixKeyType;
+      $('#set-pixname').value = SETTINGS.pixBeneficiaryName;
+      $('#set-pixcity').value = SETTINGS.pixCity;
+      $('#set-margin').value = SETTINGS.defaultMarginPercent;
+      $('#set-cardfee').value = SETTINGS.cardFeePercent;
+    }
+    $('#btn-save-settings').addEventListener('click', () => alert('Configurações salvas! (mockup)'));
+
+    /* ═══════════ AÇÕES SIMULADAS ═══════════ */
+    function bindSim() {
+      $$('[data-sim]').forEach((b) => {
+        if (b.dataset.bound) return;
+        b.dataset.bound = '1';
+        b.addEventListener('click', () => alert(b.dataset.sim + ' (mockup)'));
+      });
+    }
+
+    /* ═══════════ INIT ═══════════ */
+    renderPDV();
+    renderCart();
+    renderDashboard();
+    renderProdutos();
+    renderEstoque();
+    renderVendas();
+    renderClientes();
+    renderCaixa();
+    renderConfig();
+    bindSim();
+    go('pdv');
+  </script>
+</body>
+</html>
