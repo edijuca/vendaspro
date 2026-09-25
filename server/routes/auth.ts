@@ -1,12 +1,20 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { getDb } from '../db';
 import { authMid, JWT_SECRET } from '../middleware';
 
 export const authRouter = express.Router();
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Muitas tentativas. Tente novamente em 15 minutos.' },
+});
 
-authRouter.post('/login', (req, res) => {
+authRouter.post('/login', loginLimiter, (req, res) => {
   try {
     const { email, password } = req.body;
     const u = getDb().prepare('SELECT * FROM users WHERE email = ? AND active = 1').get(email) as any;
