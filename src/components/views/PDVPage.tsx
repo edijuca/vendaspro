@@ -8,9 +8,7 @@ import QuickCustomerModal from '../QuickCustomerModal';
 import ReceiptModal from '../ReceiptModal';
 import { playBarcodeBeep, playErrorBeep, playSuccessChime } from '../../utils/audio';
 import { generatePixPayload, generateQrCodeDataUrl } from '../../utils/pixPayload';
-
-const fold = (v: string) =>
-  String(v ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+import { fold } from '../../utils/fold';
 
 const brl = (n: number) =>
   Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

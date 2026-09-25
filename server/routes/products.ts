@@ -1,4 +1,5 @@
 import { productCreateSchema, productUpdateSchema } from '../utils/validate';
+import { fold, escapeLike } from '../utils/fold';
 import express from 'express';
 import { getDb, nextCode } from '../db';
 import { authMid, requireRole } from '../middleware';
@@ -19,11 +20,9 @@ productsRouter.get('/', (req, res) => {
                WHERE ${includeInactive ? '1=1' : 'p.active = 1'}`;
     const p: any[] = [];
     if (s) {
-      const fold = (v: string) =>
-        v.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-      const escaped = fold(s).replace(/[\\\\%_]/g, '\\\\$&');
+      const escaped = escapeLike(s);
       const prefix = `${escaped}%`;
-      sql += ` AND (fold(p.name) LIKE ? ESCAPE '\\\\' OR fold(p.barcode) LIKE ? ESCAPE '\\\\' OR fold(p.sku) LIKE ? ESCAPE '\\\\' OR fold(p.code) LIKE ? ESCAPE '\\\\')`;
+      sql += ` AND (fold(p.name) LIKE ? ESCAPE '\\' OR fold(p.barcode) LIKE ? ESCAPE '\\' OR fold(p.sku) LIKE ? ESCAPE '\\' OR fold(p.code) LIKE ? ESCAPE '\\')`;
       p.push(prefix, prefix, prefix, prefix);
     }
     sql += ' ORDER BY p.name';
@@ -37,14 +36,14 @@ productsRouter.get('/barcode/:bc', (req, res) => {
   try {
     const d = getDb();
     const bcRaw = (req.params.bc || '').trim();
-    const folded = bcRaw.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-    const escaped = folded.replace(/[\\\\%_]/g, '\\\\$&');
+    const folded = fold(bcRaw);
+    const escaped = escapeLike(bcRaw);
     const exact = d.prepare('SELECT * FROM products WHERE (barcode = ? OR sku = ? OR code = ?) AND active = 1').get(bcRaw, bcRaw, bcRaw);
     if (exact) {
       return res.json({ success: true, data: exact });
     }
     const prefix = d
-      .prepare("SELECT * FROM products WHERE (fold(barcode) LIKE ? ESCAPE '\\\\' OR fold(sku) LIKE ? ESCAPE '\\\\' OR fold(code) LIKE ? ESCAPE '\\\\') AND active = 1 ORDER BY barcode LIMIT 1")
+      .prepare("SELECT * FROM products WHERE (fold(barcode) LIKE ? ESCAPE '\\' OR fold(sku) LIKE ? ESCAPE '\\' OR fold(code) LIKE ? ESCAPE '\\') AND active = 1 ORDER BY barcode LIMIT 1")
       .get(`${escaped}%`, `${escaped}%`, `${escaped}%`);
     res.json({ success: true, data: prefix || null });
   } catch (e: any) {
