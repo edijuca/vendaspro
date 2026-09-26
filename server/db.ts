@@ -159,6 +159,14 @@ function seed() {
   const d = getDb();
   const c = d.prepare('SELECT COUNT(*) as c FROM products').get() as any;
   if (c.c > 0) return;
+  
+  // Verifica se já existem usuários (criados pelo instalador)
+  const u = d.prepare('SELECT COUNT(*) as c FROM users').get() as any;
+  if (u.c > 0) {
+    console.log('[seed] Usuários já existem no banco. Pulando criação de seed.');
+    return;
+  }
+  
   let seedPass = process.env.VP_SEED_PASSWORD;
   if (!seedPass) {
     seedPass = crypto.randomBytes(9).toString('base64url');
